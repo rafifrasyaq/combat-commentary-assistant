@@ -1,17 +1,66 @@
 # Combat Commentary Assistant
 
-AI-powered combat analysis and commentary platform.
+AI-powered combat sports analysis and commentary platform.
+
+## Overview
+
+Combat Commentary Assistant is an enterprise AI application designed to analyze combat sports events, generate fight insights, and assist commentators through AI-driven analysis.
+
+The system combines backend engineering, AI service architecture, and modern web technologies.
+
+## Objectives
+
+- Analyze fighter performance and fighting patterns
+- Generate AI-assisted commentary
+- Provide structured fight insights
+- Build scalable enterprise application architecture
 
 ## Architecture
 
-- Backend:
-  Java Spring Boot
+The system consists of:
 
-- AI Service:
-  Python FastAPI
+### Backend
+Technology:
+- Java Spring Boot
 
-- Frontend:
-  React
+Responsibilities:
+- Business logic
+- User management
+- Fight management
+- API gateway
 
-- Infrastructure:
-  Docker
+### AI Service
+Technology:
+- Python FastAPI
+
+Responsibilities:
+- Fight analysis
+- Natural Language Processing
+- Commentary generation
+
+### Frontend
+Technology:
+- React
+
+Responsibilities:
+- User interface
+- Dashboard
+- Visualization
+
+### Infrastructure
+Technology:
+- Docker
+
+Responsibilities:
+- Containerization
+- Environment management
+
+## Tech Stack
+
+- Java 25
+- Spring Boot
+- Python
+- FastAPI
+- React
+- PostgreSQL
+- Docker
