@@ -17,3 +17,6 @@ dist/
 
 # Environment
 .env
+
+# Uploaded videos
+backend/storage/

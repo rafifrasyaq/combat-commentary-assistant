@@ -1,0 +1,16 @@
+services:
+
+  postgres:
+    image: postgres:18
+    container_name: combat-commentary-postgres
+    environment:
+      POSTGRES_DB: combatassistant
+      POSTGRES_USER: combatassistant
+      POSTGRES_PASSWORD: combatassistant
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+volumes:
+  postgres_data:
