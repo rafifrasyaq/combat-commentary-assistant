@@ -30,7 +30,7 @@ public class ProcessingWorker {
             var input = state.start(jobId);
             if (input.isEmpty()) return;
             AiProcessingResponse result = client.analyze(input.get());
-            state.succeed(jobId, result.summary());
+            state.succeed(jobId, result.summary(), result.manifestPath());
         } catch (Exception error) {
             log.error("Processing job {} failed", jobId, error);
             try {

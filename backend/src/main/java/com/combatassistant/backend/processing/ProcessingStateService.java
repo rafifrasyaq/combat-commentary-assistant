@@ -34,10 +34,10 @@ public class ProcessingStateService {
     }
 
     @Transactional
-    public void succeed(UUID jobId, String summary) {
+    public void succeed(UUID jobId, String summary, String manifestPath) {
         ProcessingJob job = lockJob(jobId);
         if (job.getStatus() != ProcessingStatus.PROCESSING) return;
-        job.markCompleted(summary, Instant.now());
+        job.markCompleted(summary, manifestPath, Instant.now());
         getVideo(job.getVideoId()).setStatus(VideoStatus.COMPLETED);
     }
 

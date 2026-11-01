@@ -35,10 +35,11 @@ class ProcessingStateServiceTests {
         assertEquals(VideoStatus.PROCESSING, video.getStatus());
         assertTrue(state.start(jobId).isEmpty());
 
-        state.succeed(jobId, "Video verified");
+        state.succeed(jobId, "Video verified", "analysis/manifest.json");
         assertEquals(ProcessingStatus.COMPLETED, job.getStatus());
         assertEquals(VideoStatus.COMPLETED, video.getStatus());
         assertEquals("Video verified", job.getResultSummary());
+        assertEquals("analysis/manifest.json", job.getArtifactManifestPath());
     }
 
     @Test

@@ -36,6 +36,9 @@ public class ProcessingJob {
     @Column(name = "result_summary", length = 1000)
     private String resultSummary;
 
+    @Column(name = "artifact_manifest_path", length = 2048)
+    private String artifactManifestPath;
+
     @Column(name = "error_message", length = 500)
     private String errorMessage;
 
@@ -54,10 +57,11 @@ public class ProcessingJob {
         startedAt = now;
     }
 
-    public void markCompleted(String summary, Instant now) {
+    public void markCompleted(String summary, String manifestPath, Instant now) {
         requireStatus(ProcessingStatus.PROCESSING);
         status = ProcessingStatus.COMPLETED;
         resultSummary = summary;
+        artifactManifestPath = manifestPath;
         finishedAt = now;
     }
 
@@ -83,5 +87,6 @@ public class ProcessingJob {
     public Instant getStartedAt() { return startedAt; }
     public Instant getFinishedAt() { return finishedAt; }
     public String getResultSummary() { return resultSummary; }
+    public String getArtifactManifestPath() { return artifactManifestPath; }
     public String getErrorMessage() { return errorMessage; }
 }

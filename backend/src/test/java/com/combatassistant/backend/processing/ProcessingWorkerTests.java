@@ -18,11 +18,11 @@ class ProcessingWorkerTests {
         var jobId = UUID.randomUUID();
         var input = new ProcessingInput(jobId, UUID.randomUUID(), "video.mp4");
         when(state.start(jobId)).thenReturn(Optional.of(input));
-        when(client.analyze(input)).thenReturn(new AiProcessingResponse("stub", 10L, "Analyzed"));
+        when(client.analyze(input)).thenReturn(new AiProcessingResponse("ffmpeg", 10L, "Analyzed", "analysis/manifest.json"));
 
         new ProcessingWorker(state, client).processAsync(jobId);
 
-        verify(state).succeed(jobId, "Analyzed");
+        verify(state).succeed(jobId, "Analyzed", "analysis/manifest.json");
         verify(state, never()).fail(any(), anyString());
     }
 
@@ -38,6 +38,6 @@ class ProcessingWorkerTests {
         new ProcessingWorker(state, client).processAsync(jobId);
 
         verify(state).fail(eq(jobId), contains("failed"));
-        verify(state, never()).succeed(any(), anyString());
+        verify(state, never()).succeed(any(), anyString(), anyString());
     }
 }

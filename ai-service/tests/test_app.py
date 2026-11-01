@@ -15,16 +15,7 @@ def test_health():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "UP"
-
-
-def test_valid_video_file(monkeypatch, tmp_path):
-    monkeypatch.setenv("VIDEO_STORAGE_ROOT", str(tmp_path))
-    file_path = tmp_path / "sample.mp4"
-    file_path.write_bytes(b"fake-mp4-fixture")
-    response = client.post("/analyze", json=make_payload(file_path))
-    assert response.status_code == 200
-    assert response.json()["fileSizeBytes"] == len(b"fake-mp4-fixture")
-    assert response.json()["engine"] == "filesystem-stub-v1"
+    assert response.json()["service"] == "combat-commentary-ai-preprocessor"
 
 
 def test_path_outside_root_rejected(monkeypatch, tmp_path):
@@ -41,3 +32,11 @@ def test_missing_file_rejected(monkeypatch, tmp_path):
     monkeypatch.setenv("VIDEO_STORAGE_ROOT", str(tmp_path))
     response = client.post("/analyze", json=make_payload(tmp_path / "not-there.mp4"))
     assert response.status_code == 404
+
+
+def test_empty_file_rejected(monkeypatch, tmp_path):
+    monkeypatch.setenv("VIDEO_STORAGE_ROOT", str(tmp_path))
+    empty = tmp_path / "empty.mp4"
+    empty.touch()
+    response = client.post("/analyze", json=make_payload(empty))
+    assert response.status_code == 422

@@ -20,7 +20,7 @@ public class HttpAiProcessingClient implements AiProcessingClient {
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(client);
-        requestFactory.setReadTimeout(Duration.ofSeconds(30));
+        requestFactory.setReadTimeout(Duration.ofSeconds(120));
         this.http = RestClient.builder()
                 .baseUrl(baseUrl)
                 .requestFactory(requestFactory)
@@ -35,7 +35,9 @@ public class HttpAiProcessingClient implements AiProcessingClient {
                 .retrieve()
                 .body(AiProcessingResponse.class);
         if (response == null || response.summary() == null || response.summary().isBlank() ||
-                response.summary().length() > 1000 || response.fileSizeBytes() <= 0) {
+                response.summary().length() > 1000 || response.fileSizeBytes() <= 0 ||
+                response.manifestPath() == null || response.manifestPath().isBlank() ||
+                response.manifestPath().length() > 2048) {
             throw new IllegalStateException("Invalid AI service response");
         }
         return response;
