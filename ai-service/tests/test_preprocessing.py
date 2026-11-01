@@ -58,11 +58,17 @@ def test_real_media_generates_manifest_and_frames(monkeypatch, tmp_path):
     response = client.post("/analyze", json=_payload(video))
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body["engine"] == "ffmpeg-preprocessing-v1"
+    assert body["engine"] == "ffmpeg-motion-heuristic-v2"
     manifest = json.loads(__import__("pathlib").Path(body["manifestPath"]).read_text(encoding="utf-8"))
     assert manifest["metadata"]["width"] == 320
     assert manifest["metadata"]["height"] == 240
     assert manifest["combatEventsDetected"] is False
+    assert manifest["schemaVersion"] == 2
+    assert manifest["stage"] == "MOTION_CANDIDATES_ONLY"
+    assert manifest["motionAnalysis"]["candidateCount"] >= 0
+    motion = json.loads(__import__("pathlib").Path(manifest["motionAnalysis"]["resultPath"]).read_text(encoding="utf-8"))
+    assert motion["analysisType"] == "HEURISTIC_MOTION_CANDIDATES_ONLY"
+    assert isinstance(motion["motionCandidates"], list)
     assert manifest["metadata"]["hasAudio"] is False
     assert len(manifest["frames"]) >= 1
     for frame in manifest["frames"]:
