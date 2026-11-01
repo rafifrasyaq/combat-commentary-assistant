@@ -15,7 +15,7 @@ def test_health():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "UP"
-    assert response.json()["service"] == "combat-commentary-ai-preprocessor"
+    assert response.json()["service"] == "combat-commentary-ai-motion-candidates"
 
 
 def test_path_outside_root_rejected(monkeypatch, tmp_path):
