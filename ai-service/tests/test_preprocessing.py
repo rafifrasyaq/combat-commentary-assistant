@@ -58,18 +58,27 @@ def test_real_media_generates_manifest_and_frames(monkeypatch, tmp_path):
     response = client.post("/analyze", json=_payload(video))
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body["engine"] == "ffmpeg-motion-heuristic-v2"
+    assert body["engine"] == "ffmpeg-motion-clips-v1"
     manifest = json.loads(__import__("pathlib").Path(body["manifestPath"]).read_text(encoding="utf-8"))
     assert manifest["metadata"]["width"] == 320
     assert manifest["metadata"]["height"] == 240
     assert manifest["combatEventsDetected"] is False
-    assert manifest["schemaVersion"] == 2
-    assert manifest["stage"] == "MOTION_CANDIDATES_ONLY"
+    assert manifest["schemaVersion"] == 3
+    assert manifest["stage"] == "ACTION_CLIPS_PREPARED_ONLY"
+    assert manifest["combatEventsDetected"] is False
+    assert manifest["actionPreparation"]["modelInferenceStatus"] == "NOT_CONFIGURED"
+    clip_doc = json.loads(__import__("pathlib").Path(manifest["actionPreparation"]["resultPath"]).read_text(encoding="utf-8"))
+    assert clip_doc["stage"] == "ACTION_CLIPS_PREPARED_ONLY"
+    assert clip_doc["modelInference"]["predictedEvents"] == []
     assert manifest["motionAnalysis"]["candidateCount"] >= 0
     motion = json.loads(__import__("pathlib").Path(manifest["motionAnalysis"]["resultPath"]).read_text(encoding="utf-8"))
     assert motion["analysisType"] == "HEURISTIC_MOTION_CANDIDATES_ONLY"
     assert isinstance(motion["motionCandidates"], list)
     assert manifest["metadata"]["hasAudio"] is False
+    assert len(clip_doc["clips"]) == manifest["actionPreparation"]["clipCount"]
+    for clip in clip_doc["clips"]:
+        assert __import__("pathlib").Path(clip["path"]).is_file()
+        assert clip["modelPredictionStatus"] == "NOT_RUN"
     assert len(manifest["frames"]) >= 1
     for frame in manifest["frames"]:
         assert __import__("pathlib").Path(frame["path"]).is_file()

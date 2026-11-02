@@ -16,8 +16,9 @@ from app.media.preprocessing import (
     preprocess,
 )
 from app.motion.detection import METHOD, detect_motion
+from app.action.clips import CLIP_METHOD, prepare_action_clips
 
-app = FastAPI(title="Combat Commentary AI Service", version="0.3.1")
+app = FastAPI(title="Combat Commentary AI Service", version="0.4.0")
 
 
 class AnalyzeRequest(BaseModel):
@@ -64,12 +65,19 @@ def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
             video_path=file_path, video_id=payload.videoId, job_id=payload.jobId,
             job_directory=job_dir, duration_seconds=result.duration_seconds,
         )
-        # Upgrade manifest only after the motion artifact was fully written.
+        # M5A: prepare short, real video clips for a future video-action model.
+        # This operation intentionally does NOT run a learned classifier.
+        clips = prepare_action_clips(
+            video_path=file_path, video_id=payload.videoId, job_id=payload.jobId,
+            job_directory=job_dir, motion_candidates=motion.candidates,
+            duration_seconds=result.duration_seconds,
+        )
+        # Upgrade manifest only after the motion and action-clip artifacts were fully written.
         # A temporary file and atomic replacement prevent partial JSON reads.
         manifest_path = Path(result.manifest_path)
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        manifest["schemaVersion"] = 2
-        manifest["stage"] = "MOTION_CANDIDATES_ONLY"
+        manifest["schemaVersion"] = 3
+        manifest["stage"] = "ACTION_CLIPS_PREPARED_ONLY"
         manifest["combatEventsDetected"] = False
         manifest["motionAnalysis"] = {
             "method": METHOD,
@@ -77,6 +85,12 @@ def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
             "candidateCount": len(motion.candidates),
             "analyzedDurationSeconds": motion.analyzed_seconds,
             "truncatedByDurationLimit": motion.truncated,
+        }
+        manifest["actionPreparation"] = {
+            "method": CLIP_METHOD,
+            "resultPath": clips.path,
+            "clipCount": clips.count,
+            "modelInferenceStatus": "NOT_CONFIGURED",
         }
         temp_path = job_dir / "manifest.json.tmp"
         temp_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -92,7 +106,7 @@ def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
         raise
 
     return AnalyzeResponse(
-        engine="ffmpeg-motion-heuristic-v2",
+        engine="ffmpeg-motion-clips-v1",
         fileSizeBytes=file_path.stat().st_size,
         summary=(f"Media preprocessed: {result.duration_seconds:.1f}s, "
                  f"{result.frame_count} still frames, "
@@ -100,6 +114,6 @@ def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
                  f"motion analysis {motion.analyzed_seconds:.1f}s, "
                  f"{len(motion.candidates)} motion candidates, "
                  f"{motion.excluded_scene_changes} likely scene cuts excluded; "
-                 "combat events NOT classified."),
+                 f"{clips.count} action-ready clips; model inference NOT RUN."),
         manifestPath=result.manifest_path,
     )
