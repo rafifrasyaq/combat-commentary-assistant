@@ -1,0 +1,3 @@
+# Ultralytics may download pretrained weights into the ai-service current directory.
+*.pt
+*.pth

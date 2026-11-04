@@ -1,0 +1,8 @@
+job_id,candidate_index,human_clip_contains_punch,videomae_top_label,videomae_top_softmax_score,review_granularity
+c22eb136-112b-4529-b3a2-b72834624993,1,true,punching person (boxing),0.551,clip_level
+c22eb136-112b-4529-b3a2-b72834624993,2,true,punching person (boxing),0.517,clip_level
+c22eb136-112b-4529-b3a2-b72834624993,3,true,punching person (boxing),0.617,clip_level
+c22eb136-112b-4529-b3a2-b72834624993,4,true,punching person (boxing),0.585,clip_level
+c22eb136-112b-4529-b3a2-b72834624993,5,true,punching person (boxing),0.664,clip_level
+c22eb136-112b-4529-b3a2-b72834624993,6,true,punching person (boxing),0.562,clip_level
+c22eb136-112b-4529-b3a2-b72834624993,7,true,punching person (boxing),0.607,clip_level
