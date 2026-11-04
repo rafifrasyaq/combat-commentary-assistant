@@ -1,0 +1,4 @@
+# Optional M5B GPU inference dependencies; keep baseline requirements light.
+# Install torch/torchvision with the official CUDA wheel index separately.
+transformers==5.22.1
+av==17.0.1

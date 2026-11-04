@@ -17,6 +17,9 @@ from app.media.preprocessing import (
 )
 from app.motion.detection import METHOD, detect_motion
 from app.action.clips import CLIP_METHOD, prepare_action_clips
+from app.action.recognition import (
+    RecognitionError, publish_recognition_manifest, recognition_enabled, run_action_recognition,
+)
 
 app = FastAPI(title="Combat Commentary AI Service", version="0.4.0")
 
@@ -95,10 +98,15 @@ def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
         temp_path = job_dir / "manifest.json.tmp"
         temp_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
         os.replace(temp_path, manifest_path)
-    except (MediaToolMissing, MediaTimeout, MediaDecodeError) as exc:
+        # M5B is opt-in: preserve M5A behavior unless explicitly enabled.
+        recognition = None
+        if recognition_enabled():
+            recognition = run_action_recognition(job_dir)
+            publish_recognition_manifest(manifest_path, recognition)
+    except (MediaToolMissing, MediaTimeout, MediaDecodeError, RecognitionError) as exc:
         if result is not None:
             shutil.rmtree(Path(result.manifest_path).parent, ignore_errors=True)
-        code = 503 if isinstance(exc, MediaToolMissing) else 504 if isinstance(exc, MediaTimeout) else 422
+        code = 503 if isinstance(exc, (MediaToolMissing, RecognitionError)) else 504 if isinstance(exc, MediaTimeout) else 422
         raise HTTPException(status_code=code, detail=str(exc)) from exc
     except Exception:
         if result is not None:
@@ -106,7 +114,7 @@ def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
         raise
 
     return AnalyzeResponse(
-        engine="ffmpeg-motion-clips-v1",
+        engine="ffmpeg-motion-clips-videomae-v1" if recognition is not None else "ffmpeg-motion-clips-v1",
         fileSizeBytes=file_path.stat().st_size,
         summary=(f"Media preprocessed: {result.duration_seconds:.1f}s, "
                  f"{result.frame_count} still frames, "
@@ -114,6 +122,9 @@ def analyze(payload: AnalyzeRequest) -> AnalyzeResponse:
                  f"motion analysis {motion.analyzed_seconds:.1f}s, "
                  f"{len(motion.candidates)} motion candidates, "
                  f"{motion.excluded_scene_changes} likely scene cuts excluded; "
-                 f"{clips.count} action-ready clips; model inference NOT RUN."),
+                 f"{clips.count} action-ready clips; "
+                 + (f"VideoMAE classified {recognition.clip_count} clips as UNVERIFIED activities "
+                    f"({recognition.unknown_count} UNKNOWN); combat events NOT verified."
+                    if recognition is not None else "model inference NOT RUN.")),
         manifestPath=result.manifest_path,
     )
